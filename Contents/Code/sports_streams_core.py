@@ -1,4 +1,5 @@
 import re, urlparse, string, socket, sys, datetime
+from collections import OrderedDict
 from dateutil import parser
 from dateutil import tz
 
@@ -10,8 +11,10 @@ ART = 'art-default.png'
 ICON = 'icon-default.png'
 DEFAULT_TEAM_ICON = "Team_DEFAULT.jpg"
 
-SCHEDULE_URL = "https://raw.github.com/pudds/JsonData/master/h/{year}-{month}-{day}.json"
-GAME_URL = "https://raw.github.com/pudds/JsonData/master/h/g/{gameid}.json"
+RAW_URL = "https://raw.github.com/pudds/JsonData/master/h/"
+SCHEDULE_URL = RAW_URL + "{year}-{month}-{day}.json"
+GAME_URL = RAW_URL + "g/{gameid}.json"
+TEAM_URL = RAW_URL + "t/{team}.json"
 
 STREAM_AVAILABLE_MINUTES_BEFORE = 20
 STREAM_HIDDEN_AFTER = 360 # 6 hours oughta be plenty...
@@ -22,39 +25,37 @@ HERE = tz.tzlocal()
 UTC = tz.tzutc()
 EASTERN = tz.gettz("EST5EDT")
 
-
-TEAMS = {
-	"ANA": { "City": "Anaheim", "Name": "Ducks", "Logo": "Team_ANA.jpg", "LiveName":"ducks" },
-	"BOS": { "City": "Boston", "Name": "Bruins", "Logo": "Team_BOS.jpg", "LiveName":"bruins" },
-	"BUF": { "City": "Buffalo", "Name": "Sabres", "Logo": "Team_BUF.jpg", "LiveName":"sabres" },
-	"CAR": { "City": "Carolina", "Name": "Hurricanes", "Logo": "Team_CAR.jpg", "LiveName":"hurricanes" },
-	"CBJ": { "City": "Columbus", "Name": "Blue Jackets", "Logo": "Team_CBS.jpg", "LiveName":"bluejackets" },
-	"CGY": { "City": "Calgary", "Name": "Flames", "Logo": "Team_CGY.jpg", "LiveName":"flames" },
-	"CHI": { "City": "Chicago", "Name": "Blackhawks", "Logo": "Team_CHI.jpg", "LiveName":"blackhawks" },
-	"COL": { "City": "Colorado", "Name": "Avalanche", "Logo": "Team_COL.jpg", "LiveName":"avalanche" },
-	"DAL": { "City": "Dallas", "Name": "Stars", "Logo": "Team_DAL.jpg", "LiveName":"stars" },
-	"DET": { "City": "Detroit", "Name": "Red Wings", "Logo": "Team_DET.jpg", "LiveName":"redwings" },
-	"EDM": { "City": "Edmonton", "Name": "Oilers", "Logo": "Team_EDM.jpg", "LiveName":"oilers" },
-	"FLA": { "City": "Florida", "Name": "Panthers", "Logo": "Team_FLA.jpg", "LiveName":"panthers" },
-	"LAK": { "City": "Los Angeles", "Name": "Kings", "Logo": "Team_LOS.jpg", "LiveName":"kings" },
-	"MIN": { "City": "Minnesota", "Name": "Wild", "Logo": "Team_MIN.jpg", "LiveName":"wild" },
-	"MTL": { "City": "Montreal", "Name": "Canadiens", "Logo": "Team_MON.jpg", "LiveName":"canadiens" },
-	"NJD": { "City": "New Jersey", "Name": "Devils", "Logo": "Team_NJD.jpg", "LiveName":"devils" },
-	"NSH": { "City": "Nashville", "Name": "Predators", "Logo": "Team_NSH.jpg", "LiveName":"predators" },
-	"NYI": { "City": "NY", "Name": "Islanders", "Logo": "Team_NYI.jpg", "LiveName":"islanders" },
-	"NYR": { "City": "NY", "Name": "Rangers", "Logo": "Team_NYR.jpg", "LiveName":"rangers" },
-	"OTT": { "City": "Ottawa", "Name": "Senators", "Logo": "Team_OTT.jpg", "LiveName":"senators" },
-	"PHI": { "City": "Philadelphia", "Name": "Flyers", "Logo": "Team_PHI.jpg", "LiveName":"flyers" },
-	"PHX": { "City": "Phoenix", "Name": "Coyotes", "Logo": "Team_PHX.jpg", "LiveName":"coyotes" },
-	"PIT": { "City": "Pittsburgh", "Name": "Penguins", "Logo": "Team_PIT.jpg", "LiveName":"penguins" },
-	"SJS": { "City": "San Jose", "Name": "Sharks", "Logo": "Team_SAN.jpg", "LiveName":"sharks" },
-	"STL": { "City": "St. Louis", "Name": "Blues", "Logo": "Team_STL.jpg", "LiveName":"blues" },
-	"TBL": { "City": "Tampa Bay", "Name": "Lightning", "Logo": "Team_TAM.jpg", "LiveName":"lightning" },
-	"TOR": { "City": "Toronto", "Name": "Maple Leafs", "Logo": "Team_TOR.jpg", "LiveName":"mapleleafs" },
-	"VAN": { "City": "Vancouver", "Name": "Canucks", "Logo": "Team_VAN.jpg", "LiveName":"canucks" },
-	"WPG": { "City": "Winnipeg", "Name": "Jets", "Logo": "Team_WPG.jpg", "LiveName":"jets" },
-	"WSH": { "City": "Washington", "Name": "Capitals", "Logo": "Team_WSH.jpg", "LiveName":"capitals" }
-}
+TEAMS = OrderedDict()
+TEAMS["ANA"] = { "City": "Anaheim", "Name": "Ducks", "Logo": "Team_ANA.jpg", "LiveName":"ducks" }
+TEAMS["BOS"] = { "City": "Boston", "Name": "Bruins", "Logo": "Team_BOS.jpg", "LiveName":"bruins" }
+TEAMS["BUF"] = { "City": "Buffalo", "Name": "Sabres", "Logo": "Team_BUF.jpg", "LiveName":"sabres" }
+TEAMS["CAR"] = { "City": "Carolina", "Name": "Hurricanes", "Logo": "Team_CAR.jpg", "LiveName":"hurricanes" }
+TEAMS["CBJ"] = { "City": "Columbus", "Name": "Blue Jackets", "Logo": "Team_CBS.jpg", "LiveName":"bluejackets" }
+TEAMS["CGY"] = { "City": "Calgary", "Name": "Flames", "Logo": "Team_CGY.jpg", "LiveName":"flames" }
+TEAMS["CHI"] = { "City": "Chicago", "Name": "Blackhawks", "Logo": "Team_CHI.jpg", "LiveName":"blackhawks" }
+TEAMS["COL"] = { "City": "Colorado", "Name": "Avalanche", "Logo": "Team_COL.jpg", "LiveName":"avalanche" }
+TEAMS["DAL"] = { "City": "Dallas", "Name": "Stars", "Logo": "Team_DAL.jpg", "LiveName":"stars" }
+TEAMS["DET"] = { "City": "Detroit", "Name": "Red Wings", "Logo": "Team_DET.jpg", "LiveName":"redwings" }
+TEAMS["EDM"] = { "City": "Edmonton", "Name": "Oilers", "Logo": "Team_EDM.jpg", "LiveName":"oilers" }
+TEAMS["FLA"] = { "City": "Florida", "Name": "Panthers", "Logo": "Team_FLA.jpg", "LiveName":"panthers" }
+TEAMS["LAK"] = { "City": "Los Angeles", "Name": "Kings", "Logo": "Team_LOS.jpg", "LiveName":"kings" }
+TEAMS["MIN"] = { "City": "Minnesota", "Name": "Wild", "Logo": "Team_MIN.jpg", "LiveName":"wild" }
+TEAMS["MTL"] = { "City": "Montreal", "Name": "Canadiens", "Logo": "Team_MON.jpg", "LiveName":"canadiens" }
+TEAMS["NJD"] = { "City": "New Jersey", "Name": "Devils", "Logo": "Team_NJD.jpg", "LiveName":"devils" }
+TEAMS["NSH"] = { "City": "Nashville", "Name": "Predators", "Logo": "Team_NSH.jpg", "LiveName":"predators" }
+TEAMS["NYI"] = { "City": "NY", "Name": "Islanders", "Logo": "Team_NYI.jpg", "LiveName":"islanders" }
+TEAMS["NYR"] = { "City": "NY", "Name": "Rangers", "Logo": "Team_NYR.jpg", "LiveName":"rangers" }
+TEAMS["OTT"] = { "City": "Ottawa", "Name": "Senators", "Logo": "Team_OTT.jpg", "LiveName":"senators" }
+TEAMS["PHI"] = { "City": "Philadelphia", "Name": "Flyers", "Logo": "Team_PHI.jpg", "LiveName":"flyers" }
+TEAMS["PHX"] = { "City": "Phoenix", "Name": "Coyotes", "Logo": "Team_PHX.jpg", "LiveName":"coyotes" }
+TEAMS["PIT"] = { "City": "Pittsburgh", "Name": "Penguins", "Logo": "Team_PIT.jpg", "LiveName":"penguins" }
+TEAMS["SJS"] = { "City": "San Jose", "Name": "Sharks", "Logo": "Team_SAN.jpg", "LiveName":"sharks" }
+TEAMS["STL"] = { "City": "St. Louis", "Name": "Blues", "Logo": "Team_STL.jpg", "LiveName":"blues" }
+TEAMS["TBL"] = { "City": "Tampa Bay", "Name": "Lightning", "Logo": "Team_TAM.jpg", "LiveName":"lightning" }
+TEAMS["TOR"] = { "City": "Toronto", "Name": "Maple Leafs", "Logo": "Team_TOR.jpg", "LiveName":"mapleleafs" }
+TEAMS["VAN"] = { "City": "Vancouver", "Name": "Canucks", "Logo": "Team_VAN.jpg", "LiveName":"canucks" }
+TEAMS["WPG"] = { "City": "Winnipeg", "Name": "Jets", "Logo": "Team_WPG.jpg", "LiveName":"jets" }
+TEAMS["WSH"] = { "City": "Washington", "Name": "Capitals", "Logo": "Team_WSH.jpg", "LiveName":"capitals" }
 
 ###############################################	
 
@@ -165,6 +166,66 @@ def BuildScheduleMenu(container, date, gameCallback, mainMenuCallback):
 			thumb = R(DEFAULT_TEAM_ICON) 
 		))
 
+def BuildArchiveMenu(container, teamCallback, dayCallback, weekCallback, dateCallback):
+	container.add(DirectoryObject(
+		key = Callback(teamCallback),
+		title = "View a team's recent games",
+		thumb = R(DEFAULT_TEAM_ICON) 
+	))
+	container.add(DirectoryObject(
+		key = Callback(dayCallback),
+		title = "Browse all games by Day",
+		thumb = R(DEFAULT_TEAM_ICON) 
+	))
+	container.add(DirectoryObject(
+		key = Callback(weekCallback),
+		title = "Browse all games by Week",
+		thumb = R(DEFAULT_TEAM_ICON) 
+	))
+	container.add(DirectoryObject(
+		key = Callback(dateCallback),
+		title = "View all games on a specific date",
+		thumb = R(DEFAULT_TEAM_ICON) 
+	))
+
+def BuildArchiveTeamMenu(container, teamCallback):
+	for team in TEAMS:
+		teamConfig = GetTeamConfig(team)
+		container.add(DirectoryObject(
+			key = Callback(teamCallback, team = team),
+			title = FormatTeamName(team),
+			thumb = R(teamConfig["Logo"]) 
+		))
+
+def BuildArchiveMenuForTeam(container, team, gameCallback):
+	url = TEAM_URL.replace("{team}", team)
+	Log.Debug("Loading team's recent games from url: " + url)
+
+	try:
+		json = JSON.ObjectFromURL(url) 
+	except:
+		Log.Error("Unable to open team url")
+		raise NoGamesException
+	
+	games = GetGamesFromJson(json)
+		
+	if len(games) == 0:
+		# no games
+		raise NoGamesException
+		
+	matchupFormat = GetStreamFormatString("MatchupFormat")
+	summaryFormat = GetStreamFormatString("ArchiveSummaryFormat")
+
+	for game in games:
+		title = GetStreamFormat(matchupFormat, game.Away, game.Home, game.UtcStart, game.Summary, True) 
+		summary = GetStreamFormat(summaryFormat, game.Away, game.Home, game.UtcStart, game.Summary, True)
+		container.add(DirectoryObject(
+			key = Callback(gameCallback, gameId = game.Id, title = title),
+			title = title,
+			summary = summary,
+			thumb = R(DEFAULT_TEAM_ICON) 
+		))
+
 		
 def BuildGameMenu(container, gameId, highlightsCallback, selectQualityCallback):
 		
@@ -267,9 +328,15 @@ def GetGameSummariesForDay(date):
 		# couldn't load url, return no games
 		return games
 	
-	Log.Info("Found " + str(len(schedule)) + " games")	
+	games += GetGamesFromJson(schedule)
 		
-	for item in schedule["games"]:		
+	return games
+
+def GetGamesFromJson(json):
+	Log.Info("Found " + str(len(json["games"])) + " games")	
+
+	games = []
+	for item in json["games"]:		
 		gameId = item["id"]
 		utcStart = parser.parse(item["utcStart"])
 		summary = item["summary"]
@@ -304,9 +371,12 @@ def GetStreamFormatString(key):
 	return format
 	
 
-def GetStreamFormat(format, awayTeam, homeTeam, utcStart, summary):
+def GetStreamFormat(format, awayTeam, homeTeam, utcStart, summary, fullDate = False):
 	#Log.Debug("utcStart: " + str(utcStart))
-	localStart = utcStart.astimezone(HERE).strftime("%H:%M")
+	if fullDate:
+		localStart = utcStart.astimezone(HERE).strftime("%A - %x")
+	else:
+		localStart = utcStart.astimezone(HERE).strftime("%H:%M")
 	#Log.Debug("localStart: " + str(localStart))
 	
 	#away = CONFIG.Teams[awayTeam]["City"] + " " + CONFIG.Teams[awayTeam]["Name"]

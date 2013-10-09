@@ -11,6 +11,7 @@
 	"MatchupFormatMacOSX": "{away} at {home}",
 	"MatchupFormatiOS": "{away} at {home}",
 	"SummaryFormat": "Game time: {time} - {summary}",
+	"ArchiveSummaryFormat": "{time}\n{summary}",
 	"TodayLabel": "Today",
 	"TomorrowLabel": "Tomorrow",
 	"ArchiveLabel": "Archive",

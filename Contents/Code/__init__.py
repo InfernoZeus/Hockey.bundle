@@ -52,16 +52,68 @@ def ScheduleMenu(date, title):
 		dir.add(DirectoryObject(
 			key = Callback(ScheduleMenu, date=date), # call back to itself makes it go nowhere - in some clients anyway.
 			title = L("ErrorNoGames"),
-			thumb = R(DEFAULT_TEAM_ICON)
+			thumb = R(core.DEFAULT_TEAM_ICON)
 		))
 		
 	
 	return dir
+
+################################################################################
+# 
+# Archive Menus
+#
+################################################################################
 	
 def ArchiveMenu():
 	dir = ObjectContainer(title2 = "Archive", art=R(core.ART))
+
+	core.BuildArchiveMenu(dir, ArchiveTeamMenu, ArchiveDayMenu, ArchiveWeekMenu, ArchiveDateMenu)
 	# this should allow users to select older dates than the main menu shows.
 	return dir
+
+def ArchiveTeamMenu():
+	dir = ObjectContainer(title2 = "Archive", art=R(core.ART))
+
+	core.BuildArchiveTeamMenu(dir, ArchiveMenuForTeam)
+	# this should allow users to select older dates than the main menu shows.
+
+	
+	return dir
+
+def ArchiveMenuForTeam(team):
+	dir = ObjectContainer(title2 = "Archive", art=R(core.ART))
+
+	try:
+		core.BuildArchiveMenuForTeam(dir, team, GameMenu)
+	except core.NoGamesException:
+		dir.add(DirectoryObject(
+			key = Callback(ArchiveMenuForTeam, team=team), # call back to itself makes it go nowhere - in some clients anyway.
+			title = L("ErrorNoGames"),
+			thumb = R(core.DEFAULT_TEAM_ICON)
+		))
+	
+	# this should allow users to select older dates than the main menu shows.
+	return dir
+
+def ArchiveDayMenu():
+	dir = ObjectContainer(title2 = "Archive", art=R(core.ART))
+
+	# this should allow users to select older dates than the main menu shows.
+	return dir
+
+def ArchiveWeekMenu():
+	dir = ObjectContainer(title2 = "Archive", art=R(core.ART))
+
+	# this should allow users to select older dates than the main menu shows.
+	return dir
+
+def ArchiveDateMenu():
+	dir = ObjectContainer(title2 = "Archive", art=R(core.ART))
+
+	# this should allow users to select older dates than the main menu shows.
+	return dir
+
+################################################################################
 	
 def GameMenu(gameId, title):
 	dir = ObjectContainer(title2 = title, art=R(core.ART))
