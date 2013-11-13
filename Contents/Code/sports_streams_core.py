@@ -10,8 +10,8 @@ ART = 'art-default.png'
 ICON = 'icon-default.png'
 DEFAULT_TEAM_ICON = "Team_DEFAULT.jpg"
 
-SCHEDULE_URL = "https://raw.github.com/pudds/JsonData/master/h/{year}-{month}-{day}.json"
-GAME_URL = "https://raw.github.com/pudds/JsonData/master/h/g/{gameid}.json"
+SCHEDULE_URL = "http://hockeystreams.parseapp.com/schedule?year={year}&month={month}&day={day}"
+GAME_URL = "http://hockeystreams.parseapp.com/game?id={gameid}"
 
 STREAM_AVAILABLE_MINUTES_BEFORE = 20
 STREAM_HIDDEN_AFTER = 360 # 6 hours oughta be plenty...
@@ -65,19 +65,8 @@ class NotAvailableException(Exception):
 	
 class NoGamesException(Exception):
 	pass
-	
 
-class Game:
-	def __init__(self, id, seasonId, type, gameNumber, utcStart, summary, home, away): # pbp
-		self.Id = id
-		self.SeasonId = seasonId
-		self.Type = type
-		self.GameNumber = gameNumber
-		self.UtcStart = utcStart
-		self.Summary = summary
-		self.Home = home
-		self.Away = away
-				
+
 class Team:
 	def __init__(self, ab, record, live, replayShort, replayFull):
 		self.AB = ab
@@ -186,25 +175,25 @@ def BuildGameMenu(container, gameId, highlightsCallback, selectQualityCallback):
 	Log.Debug("Live Streams Available? " + str(liveStreamsAvailable))
 		
 	# if there is a live away stream, add that
-	if game["a"]["live"] != "":
-		container.add(GetStreamDirectory(selectQualityCallback, url, "liveAway", game["a"]["ab"], L("AwayStreamLabelFormat"), liveStreamsAvailable))
+	if game["away"]["live"] != "":
+		container.add(GetStreamDirectory(selectQualityCallback, url, "liveAway", game["away"]["ab"], L("AwayStreamLabelFormat"), liveStreamsAvailable))
 
-	if game["h"]["live"] != "":
-		container.add(GetStreamDirectory(selectQualityCallback, url, "liveHome", game["h"]["ab"], L("HomeStreamLabelFormat"), liveStreamsAvailable))
+	if game["home"]["live"] != "":
+		container.add(GetStreamDirectory(selectQualityCallback, url, "liveHome", game["home"]["ab"], L("HomeStreamLabelFormat"), liveStreamsAvailable))
 		
 	# replays
-	if game["a"]["replayShort"] != "":
-		container.add(GetStreamDirectory(selectQualityCallback, url, "replayShortAway", game["a"]["ab"], L("AwayReplayCondensedFormat"), replaysAvailable))
-	if game["a"]["replayFull"] != "":
-		container.add(GetStreamDirectory(selectQualityCallback, url, "replayFullAway", game["a"]["ab"], L("AwayReplayFullFormat"), replaysAvailable))
+	if game["away"]["replayShort"] != "":
+		container.add(GetStreamDirectory(selectQualityCallback, url, "replayShortAway", game["away"]["ab"], L("AwayReplayCondensedFormat"), replaysAvailable))
+	if game["away"]["replayFull"] != "":
+		container.add(GetStreamDirectory(selectQualityCallback, url, "replayFullAway", game["away"]["ab"], L("AwayReplayFullFormat"), replaysAvailable))
 	
-	if game["h"]["replayShort"] != "":
-		container.add(GetStreamDirectory(selectQualityCallback, url, "replayShortHome", game["h"]["ab"], L("HomeReplayCondensedFormat"), replaysAvailable))
-	if game["h"]["replayFull"] != "":
-		container.add(GetStreamDirectory(selectQualityCallback, url, "replayFullHome", game["h"]["ab"], L("HomeReplayFullFormat"), replaysAvailable))
+	if game["home"]["replayShort"] != "":
+		container.add(GetStreamDirectory(selectQualityCallback, url, "replayShortHome", game["home"]["ab"], L("HomeReplayCondensedFormat"), replaysAvailable))
+	if game["home"]["replayFull"] != "":
+		container.add(GetStreamDirectory(selectQualityCallback, url, "replayFullHome", game["home"]["ab"], L("HomeReplayFullFormat"), replaysAvailable))
 		
-	if len(game["pbp"]) > 0:
-		container.add(GetDirectoryItem(L("HighlightsLabel"), Callback(highlightsCallback, gameId = gameId, title = L("HighlightsLabel"))))
+	# if len(game["pbp"]) > 0:
+	# 	container.add(GetDirectoryItem(L("HighlightsLabel"), Callback(highlightsCallback, gameId = gameId, title = L("HighlightsLabel"))))
 	
 
 
@@ -223,7 +212,7 @@ def GetStreamDirectory(selectQualityCallback, gameUrl, type, teamAb, titleFormat
 	team = GetTeamConfig(teamAb)
 	Log.Debug("Add clip for " + team["City"])
 	
-	url = gameUrl + "?type=" + type + "&name=" + team["LiveName"] + "&logo=" + team["Logo"] + "&q=" #appended in next menu
+	url = gameUrl + "&type=" + type + "&name=" + team["LiveName"] + "&logo=" + team["Logo"] + "&q=" #appended in next menu
 	title = str(titleFormat).replace("{name}", team["Name"])
 	
 	# tie to video prefix..
@@ -267,14 +256,14 @@ def GetGameSummariesForDay(date):
 		# couldn't load url, return no games
 		return games
 	
-	Log.Info("Found " + str(len(schedule)) + " games")	
+	Log.Info("Found " + str(len(schedule["games"])) + " games")	
 		
 	for item in schedule["games"]:		
-		gameId = item["id"]
+		gameId = str(item["gameId"])
 		utcStart = parser.parse(item["utcStart"])
 		summary = item["summary"]
-		home = item["h"]
-		away = item["a"]
+		home = item["home"]["ab"];
+		away = item["away"]["ab"];
 				
 		Log.Debug(away + " at " + home + " at " + str(utcStart) + "(utc)")		
 		

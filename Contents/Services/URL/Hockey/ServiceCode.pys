@@ -127,8 +127,9 @@ def BuildReplayObject(game, data):
 	year = game["easternStart"][0:4]
 	month = game["easternStart"][5:7]
 	day = game["easternStart"][8:10]
-	gameType = game["t"].lstrip("0") # not zero padded
-	gameNumber = game["gn"].lstrip("0") # not zero padded
+	gameId = str(game["gameId"])
+	gameType = gameId[4:6].lstrip("0") # not zero padded
+	gameNumber = gameId[6:].lstrip("0") # not zero padded
 	quality = data["q"]
 	type = data["type"]
 	
@@ -146,7 +147,7 @@ def BuildReplayObject(game, data):
 		fullShort = "condensed_2"
 		
 	videoUrl = REPLAY_STREAM_FORMAT.replace("{year}", year).replace("{month}", month).replace("{day}", day)
-	videoUrl = videoUrl.replace("{type}", gameType).replace("{gameNumber}", gameNumber).replace("{away}", game["a"]["ab"]).replace("{home}", game["h"]["ab"])
+	videoUrl = videoUrl.replace("{type}", gameType).replace("{gameNumber}", gameNumber).replace("{away}", game["away"]["ab"]).replace("{home}", game["home"]["ab"])
 	videoUrl = videoUrl.replace("{awayHome}", awayHome).replace("{fullShort}", fullShort).replace("{q}", quality)
 	
 	Log.Debug("Replay Url: " + videoUrl) 
